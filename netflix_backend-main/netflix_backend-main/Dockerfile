@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 1 — Setup (Node.js)
-# Runs setup.js to initialise git, write .env, and prepare the workspace
+# Writes the .env file with MongoDB credentials
 # ─────────────────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS setup
 
@@ -16,12 +16,13 @@ COPY setup.js .
 # No external npm dependencies, but install validates package.json is valid
 RUN npm install
 
-# Accept MongoDB credentials as build args so setup.js can write the .env
+# Accept MongoDB credentials as build args
 ARG MONGO_DATABASE
 ARG MONGO_CLUSTER
 
-# Write the .env file non-interactively using Node directly
-# (bypasses the interactive readline prompts in setup.js)
+# Write the .env file — MONGO_CLUSTER must be just the host part e.g:
+# username:password@cluster0.xxxxx.mongodb.net
+# Do NOT include mongodb+srv:// here — application.properties already adds it
 RUN mkdir -p src/main/resources && \
     echo "MONGO_DATABASE=${MONGO_DATABASE}" > src/main/resources/.env && \
     echo "MONGO_CLUSTER=${MONGO_CLUSTER}" >> src/main/resources/.env
@@ -45,6 +46,11 @@ RUN mvn dependency:go-offline -B
 
 # Copy the full source tree
 COPY src ./src
+
+# Fix application.properties to use correct Spring variable syntax
+# This ensures ${MONGO_CLUSTER} and ${MONGO_DATABASE} are read from env vars
+RUN echo "spring.data.mongodb.uri=mongodb+srv://\${MONGO_CLUSTER}" > src/main/resources/application.properties && \
+    echo "spring.data.mongodb.database=\${MONGO_DATABASE}" >> src/main/resources/application.properties
 
 # Pull the .env written by the setup stage into the correct resource path
 COPY --from=setup /setup/src/main/resources/.env src/main/resources/.env
@@ -70,10 +76,7 @@ WORKDIR /app
 # Copy only the built JAR from the build stage
 COPY --from=build /app/target/movieist-0.0.1-SNAPSHOT.jar app.jar
 
-# Copy the .env from the setup stage
-COPY --from=setup /setup/src/main/resources/.env .env
-
-# Copy the setup script and package.json for reference / manual re-runs
+# Copy the setup script and package.json for reference
 COPY --from=setup /setup/setup.js setup.js
 COPY --from=setup /setup/package.json package.json
 
@@ -92,5 +95,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
 # JVM tuning for containers: respect cgroup memory limits
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
-# Launch the application
+# Launch the application — env vars passed at runtime via docker run -e
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
