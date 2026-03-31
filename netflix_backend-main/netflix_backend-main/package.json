@@ -1,0 +1,29 @@
+{
+  "name": "movieist-setup",
+  "version": "1.0.0",
+  "description": "Setup & automation script for the movieist Netflix-style Spring Boot backend",
+  "main": "setup.js",
+  "scripts": {
+    "start": "node setup.js",
+    "setup": "node setup.js",
+    "setup:run": "node setup.js --run",
+    "setup:ci": "node setup.js --ci",
+    "setup:all": "node setup.js --run --ci"
+  },
+  "keywords": [
+    "netflix",
+    "movieist",
+    "spring-boot",
+    "mongodb",
+    "devops",
+    "gitlab-ci",
+    "setup"
+  ],
+  "author": "DigitalWitch",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
