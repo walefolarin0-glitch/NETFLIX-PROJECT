@@ -42,7 +42,7 @@ RUN npm run build
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 3 — Runtime
-# Serve the static build with Nginx (lightweight, production-grade)
+# Serve the static build with Nginx on port 3000
 # ─────────────────────────────────────────────────────────────────────────────
 FROM nginx:1.25-alpine AS runtime
 
@@ -56,15 +56,15 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy the React production build into Nginx's serve directory
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy custom Nginx config to handle React Router (client-side routing)
+# Copy custom Nginx config — listens on port 3000
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80 (Nginx default)
-EXPOSE 80
+# ✅ FIX: Expose 3000 to match nginx.conf (was incorrectly set to 80)
+EXPOSE 3000
 
-# Health check — confirms Nginx is serving the app
+# Health check on the correct port
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:80 || exit 1
+  CMD wget -qO- http://localhost:3000 || exit 1
 
 # Start Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]
