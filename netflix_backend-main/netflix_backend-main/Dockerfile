@@ -69,7 +69,7 @@ LABEL description="Netflix Backend — movieist Spring Boot app (runtime stage)"
 LABEL version="0.0.1-SNAPSHOT"
 
 # Create a non-root user for security best practices
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN apk add --no-cache curl && addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
