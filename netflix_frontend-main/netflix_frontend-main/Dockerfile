@@ -63,8 +63,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3000
 
 # Health check on the correct port
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:3000 || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
 
 # Start Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]

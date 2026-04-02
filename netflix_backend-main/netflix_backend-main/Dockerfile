@@ -89,8 +89,8 @@ USER appuser
 EXPOSE 8080
 
 # Health check — hits the Spring Boot actuator health endpoint
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # JVM tuning for containers: respect cgroup memory limits
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
